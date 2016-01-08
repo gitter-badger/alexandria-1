@@ -31,11 +31,13 @@ import javax.ws.rs.ApplicationPath;
 import org.glassfish.jersey.filter.LoggingFilter;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.server.ServerProperties;
+import org.glassfish.jersey.server.filter.RolesAllowedDynamicFeature;
 
 import nl.knaw.huygens.Log;
 import nl.knaw.huygens.alexandria.config.JsonConfiguration;
 import nl.knaw.huygens.alexandria.config.ValidationConfigurationContextResolver;
 import nl.knaw.huygens.alexandria.jaxrs.AuthorizationRequestFilter;
+import nl.knaw.huygens.alexandria.jaxrs.AuthenticationFilter;
 
 @ApplicationPath("/")
 public class AlexandriaApplication extends ResourceConfig {
@@ -51,6 +53,9 @@ public class AlexandriaApplication extends ResourceConfig {
 
     // Server-side request logging, including entities
     register(new LoggingFilter(getAnonymousLogger(), true));
+
+    // Authentication and Authorization
+    register(AuthenticationFilter.class);
     register(AuthorizationRequestFilter.class);
 
     // Validation configuration
@@ -58,6 +63,8 @@ public class AlexandriaApplication extends ResourceConfig {
 
     // JSON configuration
     register(JsonConfiguration.class);
+
+    register(RolesAllowedDynamicFeature.class);
 
     // // X-Jersey-Tracing-nnn diagnostic response headers
     // property(ServerProperties.TRACING, "ALL");

@@ -4,21 +4,19 @@ import java.security.Principal;
 
 import javax.ws.rs.core.SecurityContext;
 
+import com.google.common.base.MoreObjects;
+
+import nl.knaw.huygens.Log;
+
 public class AlexandriaSecurityContext implements SecurityContext {
-  private Principal principal;
-  private String authenticationScheme;
+  private final Principal principal;
+  private final String authenticationScheme;
+  private final boolean isSecure;
 
-  protected AlexandriaSecurityContext() {
-  }
-
-  protected AlexandriaSecurityContext withUserPrincipal(Principal principal) {
-    this.principal = principal;
-    return this;
-  }
-
-  protected AlexandriaSecurityContext withAuthenticationScheme(String authenticationScheme) {
+  protected AlexandriaSecurityContext(String authenticationScheme, Principal principal, boolean isSecure) {
     this.authenticationScheme = authenticationScheme;
-    return this;
+    this.principal = principal;
+    this.isSecure = isSecure;
   }
 
   @Override
@@ -28,17 +26,28 @@ public class AlexandriaSecurityContext implements SecurityContext {
 
   @Override
   public boolean isUserInRole(String role) {
-    return false;
+    Log.trace("isUserInRole({}) ?", role);
+    return true;
   }
 
   @Override
   public boolean isSecure() {
-    return false;
+    return isSecure;
   }
 
   @Override
   public String getAuthenticationScheme() {
+    Log.trace("getAuthenticationScheme: {}", authenticationScheme);
     return authenticationScheme;
+  }
+
+  @Override
+  public String toString() {
+    return MoreObjects.toStringHelper(this) //
+                      .add("scheme", getAuthenticationScheme()) //
+                      .add("isSecure", isSecure()) //
+                      .add("principal", getUserPrincipal()) //
+                      .toString();
   }
 
 }

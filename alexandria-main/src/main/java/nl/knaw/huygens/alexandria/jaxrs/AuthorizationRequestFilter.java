@@ -9,12 +9,12 @@ import java.util.Set;
 
 import javax.annotation.Priority;
 import javax.inject.Inject;
+import javax.ws.rs.ForbiddenException;
 import javax.ws.rs.Priorities;
 import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.container.ContainerRequestFilter;
 import javax.ws.rs.container.ResourceInfo;
 import javax.ws.rs.core.Context;
-import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
 
 import com.google.common.collect.Sets;
@@ -45,17 +45,18 @@ public class AuthorizationRequestFilter implements ContainerRequestFilter {
 
     boolean needsAuth = resourceInfo.getResourceMethod().getAnnotation(ANNOTATION_CLASS) != null;
     if (needsAuth || !PUBLIC_METHODS.contains(requestContext.getMethod())) {
-      String headerString = requestContext.getHeaderString(AUTH_HEADER);
-      requestContext.setSecurityContext(securityContextFactory.createFrom(headerString));
-      final SecurityContext securityContext = requestContext.getSecurityContext();
-      if (securityContext == null || securityContext.getUserPrincipal() == null) {
-        requestContext.abortWith(//
-            Response.status(Response.Status.UNAUTHORIZED)//
-                    .entity("User cannot access the resource.")//
-                    .build());
-      } else {
-        Log.info("user={}", securityContext.getUserPrincipal().getName());
+      SecurityContext securityContext = requestContext.getSecurityContext();
+      if (requestContext.getSecurityContext() == null) {
+        String headerString = requestContext.getHeaderString(AUTH_HEADER);
+        securityContext = securityContextFactory.fromHeaderString(headerString);
+        requestContext.setSecurityContext(securityContext);
       }
+
+      if (securityContext == null || securityContext.getUserPrincipal() == null) {
+        throw new ForbiddenException("User cannot access the resource.");
+      }
+
+      Log.info("user={}", securityContext.getUserPrincipal().getName());
     }
   }
 }
